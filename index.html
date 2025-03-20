@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors Game</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            max-width: 400px;
+            width: 95%;
+            transition: transform 0.5s;
+        }
+
+        .container:hover {
+            transform: scale(1.05);
+        }
+
+        input {
+            padding: 10px;
+            width: 80%;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: #ff9800;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background: #e68900;
+            transform: scale(1.1);
+        }
+
+        .choices button {
+            font-size: 24px;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            background: #4caf50;
+            color: white;
+            font-weight: bold;
+            border: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .choices button:hover {
+            background: #45a049;
+            transform: scale(1.1);
+        }
+
+        #result {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #timer {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #ff3d00;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="register-container" class="container">
+        <h2>Welcome to Rock Paper Scissors</h2>
+        <input type="text" id="username" placeholder="Enter Your Name" autocomplete="off">
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="game-container" class="container hidden">
+        <h1>Rock Paper Scissors</h1>
+        <p id="player-name"></p>
+        <p id="round-text">Round 1 (First to 10 Wins)</p>
+        <p>Score: <span id="user-score">0</span> - <span id="computer-score">0</span></p>
+        <div class="choices">
+            <button onclick="playGame('rock✊')">✊ Rock</button>
+            <button onclick="playGame('paper✋')">✋ Paper</button>
+            <button onclick="playGame('scissors✌')">✌ Scissors</button>
+        </div>
+        <div id="result"></div>
+        <button id="next-round" class="hidden" onclick="startRound2()">Next Round</button>
+        <button id="next-round-3" class="hidden" onclick="startRound3()">Next Round</button>
+        <div id="timer" class="hidden">Time Left: 60s</div>
+    </div>
+
+    <script>
+        let userScore = 0;
+        let computerScore = 0;
+        let userName = "";
+        let timer;
+        let moveTimeout;
+        let timeLeft = 60;
+        let round = 1;
+
+        function startGame() {
+            userName = document.getElementById("username").value.trim();
+            if (userName === "") {
+                alert("Please enter your name");
+                return;
+            }
+            document.getElementById("register-container").classList.add("hidden");
+            document.getElementById("game-container").classList.remove("hidden");
+            document.getElementById("player-name").textContent = `Player: ${userName}`;
+        }
+
+        function playGame(userChoice) {
+            if (round === 3) clearTimeout(moveTimeout); // Clear previous timeout for new move
+
+            const choices = ['rock✊', 'paper✋', 'scissors✌'];
+            const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+            let resultText = "";
+
+            if (userChoice === computerChoice) {
+                resultText = "It's a tie!🪢🪢";
+            } else if (
+                (userChoice === 'rock✊' && computerChoice === 'scissors✌') ||
+                (userChoice === 'paper✋' && computerChoice === 'rock✊') ||
+                (userChoice === 'scissors✌' && computerChoice === 'paper✋')
+            ) {
+                resultText = "You Win!🏆🏆🏆";
+                userScore++;
+            } else {
+                resultText = "Computer Wins!👎👎👎";
+                computerScore++;
+            }
+
+            document.getElementById("user-score").textContent = userScore;
+            document.getElementById("computer-score").textContent = computerScore;
+            document.getElementById("result").textContent = `You chose ${userChoice}, Computer chose ${computerChoice}. ${resultText}`;
+
+            checkRoundStatus();
+            if (round === 3) startMoveTimeout(); // Restart timeout after move
+        }
+
+        function checkRoundStatus() {
+            if (round === 1) {
+                if (userScore === 10) {
+                    alert("Congrats! You won Round 1!");
+                    document.getElementById("next-round").classList.remove("hidden");
+                    disableButtons();
+                } else if (computerScore === 10) {
+                    alert("Computer wins Round 1! Restarting...");
+                    restartRound();
+                }
+            } else if (round === 2 && timeLeft === 0) {
+                checkRound2Winner();
+            }
+        }
+
+        function disableButtons() {
+            document.querySelectorAll(".choices button").forEach(button => button.disabled = true);
+        }
+
+        function enableButtons() {
+            document.querySelectorAll(".choices button").forEach(button => button.disabled = false);
+        }
+
+        function startRound2() {
+            round = 2;
+            restartRound();
+            document.getElementById("next-round").classList.add("hidden");
+            document.getElementById("round-text").textContent = "Round 2 (60 Seconds Countdown)";
+            startTimer(60, checkRound2Winner);
+        }
+
+        function checkRound2Winner() {
+            disableButtons();
+            if (userScore > computerScore) {
+                alert("Congrats! You won Round 2!");
+                document.getElementById("next-round-3").classList.remove("hidden");
+            } else {
+                alert("Computer wins Round 2! Restarting...");
+                restartRound();
+                startTimer(60, checkRound2Winner);
+            }
+        }
+
+        function startTimer(duration, callback) {
+    clearInterval(timer); // Clear any existing interval
+    timeLeft = duration; // Reset timer to the given duration
+    document.getElementById("timer").classList.remove("hidden");
+    document.getElementById("timer").textContent = `Time Left: ${timeLeft}s`;
+
+    timer = setInterval(() => {
+        timeLeft--;
+
+        if (timeLeft >= 0) {
+            // Update the display every second
+            document.getElementById("timer").textContent = `Time Left: ${timeLeft}s`;
+        }
+
+        if (timeLeft === 0) {
+            // When the timer reaches zero, stop it and trigger the callback
+            clearInterval(timer);
+            callback();
+        }
+    }, 1000); // Run every second
+}
+
+function startMoveTimeout() {
+    clearTimeout(moveTimeout); // Clear any existing timeout
+    moveTimeout = setTimeout(() => {
+        alert("You waited too long! You lose the game.");
+        restartRound(); // Reset round if user waits too long
+        startTimer(120, declareFinalWinner); // Restart the 120-second timer properly
+    }, 10000); // Set to 10 seconds
+}
+
+function startRound3() {
+    round = 3;
+    restartRound(); // Reset all scores and UI elements for the new round
+    document.getElementById("next-round-3").classList.add("hidden");
+    document.getElementById("round-text").textContent = "Round 3 (Score at least 40 & Lead)";
+    startTimer(120, declareFinalWinner); // Start the 120-second countdown
+    startMoveTimeout(); // Activate the 10-second inactivity timeout
+}
+
+function restartRound() {
+    userScore = 0;
+    computerScore = 0;
+    document.getElementById("user-score").textContent = 0;
+    document.getElementById("computer-score").textContent = 0;
+    document.getElementById("result").textContent = "";
+    enableButtons();
+    clearInterval(timer); // Clear any ongoing timer
+    clearTimeout(moveTimeout); // Reset the move timeout
+
+    if (round === 3) {
+        timeLeft = 120; // Reset timer for Round 3
+        document.getElementById("timer").textContent = `Time Left: ${timeLeft}s`;
+        document.getElementById("timer").classList.remove("hidden");
+    } else {
+        document.getElementById("timer").classList.add("hidden");
+    }
+}
+
+function declareFinalWinner() {
+    clearTimeout(moveTimeout); // Clear the move timeout to avoid conflict
+    if (userScore >= 40 && userScore > computerScore) {
+        alert(`${userName} wins the game!`);
+    } else {
+        alert("Computer wins Round 3! Restarting...");
+        restartRound();
+        startTimer(120, declareFinalWinner); // Restart the 120-second timer
+    }
+}
+</script>
+</body>
+</html>
